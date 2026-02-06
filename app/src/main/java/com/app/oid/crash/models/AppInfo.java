@@ -56,5 +56,5 @@ public class AppInfo implements Comparable<AppInfo> {
     @Override
     public int compareTo(AppInfo other) {
         return this.appName.compareToIgnoreCase(other.appName);
-    }
+    } 
 }
