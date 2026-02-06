@@ -22,11 +22,13 @@ jobs:
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
         run: |
-          echo "$KEYSTORE_BASE64" | base64 --decode > ${{ github.workspace }}/safevoice.jks
+          # The filename is now changed to match your project
+          echo "$KEYSTORE_BASE64" | base64 --decode > ${{ github.workspace }}/oid-release-key.jks
 
-      - name: Build Release APK
+      - name: Build with Gradle
         env:
-          KEYSTORE_FILE: ${{ github.workspace }}/safevoice.jks
+          # This now points to the new, correctly named file
+          KEYSTORE_FILE: ${{ github.workspace }}/oid-release-key.jks
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
@@ -36,5 +38,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: app-release
-          # This wildcard (*) finds any file ending with .apk
-          path: app/build/outputs/apk/release/*.apk 
+          # The wildcard fix is still here to catch any APK name
+          path: app/build/outputs/apk/release/*.apk
