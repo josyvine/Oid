@@ -25,7 +25,6 @@
             android:textSize="18sp"
             android:textStyle="bold" />
 
-        <!-- Note: We will fix this ic_sync icon in the next step -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_refresh"
             style="@style/Widget.MaterialComponents.Button.TextButton"
@@ -72,7 +71,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/layout_header">
 
-        <!-- Updated to local ic_info icon -->
         <ImageView
             android:layout_width="64dp"
             android:layout_height="64dp"
