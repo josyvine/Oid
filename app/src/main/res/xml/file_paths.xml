@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<paths xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Existing: Allows sharing of QR images -->
-    <cache-path
-        name="shared_images"
-        path="images/" />
-
-    <!-- FIXED: Added this line to allow sharing of CSV reports -->
-    <cache-path
-        name="shared_reports"
+<paths>
+    <!-- Maps the specific report folder in external storage -->
+    <external-files-path
+        name="crash_reports"
         path="reports/" />
+        
+    <!-- Maps the internal cache if needed -->
+    <cache-path
+        name="cache_files"
+        path="." />
 </paths>
