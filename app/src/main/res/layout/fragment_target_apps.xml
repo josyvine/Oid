@@ -24,7 +24,6 @@
             android:paddingStart="12dp"
             android:paddingEnd="12dp">
 
-            <!-- Updated to local ic_search icon -->
             <ImageView
                 android:layout_width="24dp"
                 android:layout_height="24dp"
