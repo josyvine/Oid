@@ -70,7 +70,7 @@
                 tools:text="12.5 KB" />
         </LinearLayout>
 
-        <!-- Delete Action Icon - Updated to use local ic_delete -->
+        <!-- Delete Action Icon - Using local ic_delete -->
         <ImageButton
             android:id="@+id/btn_delete_report"
             android:layout_width="36dp"
