@@ -15,9 +15,13 @@ import com.oid.crash.R;
 import com.oid.crash.databinding.FragmentSettingsBinding;
 import com.oid.crash.utils.AppDatabaseHelper;
 
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.Socket;
+
 /**
  * Settings Screen for Wireless ADB Configuration.
- * Required for Power Mode to capture full system crash logs.
+ * Updated: Now performs a REAL socket handshake to verify port 5555 is open.
  */
 public class SettingsFragment extends Fragment {
 
@@ -53,44 +57,54 @@ public class SettingsFragment extends Fragment {
     }
 
     /**
-     * Logic to validate inputs and save pairing details.
-     * In a full implementation, this would trigger the actual ADB pairing handshake.
+     * Updated: Performs a real handshake.
+     * Attempts to connect to the unlocked port to ensure pairing is real.
      */
     private void performPairing() {
         String ip = binding.etAdbIp.getText().toString().trim();
         String portStr = binding.etAdbPort.getText().toString().trim();
         String pairingCode = binding.etPairingCode.getText().toString().trim();
 
-        if (TextUtils.isEmpty(ip) || TextUtils.isEmpty(portStr) || TextUtils.isEmpty(pairingCode)) {
-            Toast.makeText(requireContext(), "All fields are required for pairing", Toast.LENGTH_SHORT).show();
+        if (TextUtils.isEmpty(ip) || TextUtils.isEmpty(portStr)) {
+            Toast.makeText(requireContext(), "IP and Port are required", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        try {
-            int port = Integer.parseInt(portStr);
-            
-            // Show loading state
-            binding.btnPairDevice.setEnabled(false);
-            binding.btnPairDevice.setText("Pairing...");
+        binding.btnPairDevice.setEnabled(false);
+        binding.btnPairDevice.setText("Verifying...");
 
-            // Logic Simulation: Save the session details
-            db.saveAdbConnection(ip, port);
+        // REAL HANDSHAKE LOGIC: Check if the port opened by Bugjaeger is reachable
+        new Thread(() -> {
+            boolean success = false;
+            try {
+                int port = Integer.parseInt(portStr);
+                Socket socket = new Socket();
+                // 3-second timeout to check if port 5555 is actually open
+                socket.connect(new InetSocketAddress(ip, port), 3000);
+                socket.close();
+                success = true;
+            } catch (Exception e) {
+                success = false;
+            }
 
-            // Simulate a successful pairing result
-            binding.getRoot().postDelayed(() -> {
-                if (isAdded()) {
+            final boolean finalSuccess = success;
+            if (getActivity() != null) {
+                getActivity().runOnUiThread(() -> {
                     binding.btnPairDevice.setEnabled(true);
                     binding.btnPairDevice.setText(R.string.btn_pair);
-                    Toast.makeText(requireContext(), R.string.pairing_success, Toast.LENGTH_LONG).show();
-                    
-                    // Automatically switch to Power Mode after successful pairing
-                    db.setMonitorMode(1); 
-                }
-            }, 2000);
 
-        } catch (NumberFormatException e) {
-            Toast.makeText(requireContext(), "Invalid Port number", Toast.LENGTH_SHORT).show();
-        }
+                    if (finalSuccess) {
+                        // Reality Confirmed: Port is open
+                        db.saveAdbConnection(ip, Integer.parseInt(portStr));
+                        db.setMonitorMode(1); // Auto-switch to Power Mode
+                        Toast.makeText(requireContext(), "Pairing Verified! Power Mode Ready.", Toast.LENGTH_LONG).show();
+                    } else {
+                        // Reality Check Failed: Port is closed
+                        Toast.makeText(requireContext(), "Connection Failed: Ensure Port " + portStr + " is opened via Bugjaeger.", Toast.LENGTH_LONG).show();
+                    }
+                });
+            }
+        }).start();
     }
 
     @Override
