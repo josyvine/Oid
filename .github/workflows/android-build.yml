@@ -18,13 +18,11 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      # STEP REMOVED: No Decode Keystore
-      # We skip the broken base64 step entirely.
-
+      # This is the corrected build step. It uses the action to run Gradle.
       - name: Build Debug APK
-        # We run assembleDebug instead of assembleRelease
-        # This uses the Android built-in debug key automatically.
-        run: ./gradlew app:assembleDebug
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: app:assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
