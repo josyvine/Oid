@@ -6,7 +6,7 @@ on:
 
 jobs:
   build:
-    runs-on: Ubuntu-latest  
+    runs-on: Ubuntu-latest 
 
     steps:
       - name: Checkout code
@@ -18,24 +18,15 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Decode Keystore
-        run: |
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > ${{ github.workspace }}/safevoice.jks
-
-      - name: Build Release APK
+      - name: Build with Gradle
         uses: gradle/gradle-build-action@v2
-        env:
-          KEYSTORE_FILE: ${{ github.workspace }}/safevoice.jks
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         with:
           gradle-version: '8.0'
           cache-disabled: true
-          arguments: app:assembleRelease
+          arguments: app:assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: app-release.apk
-          path: app/build/outputs/apk/release/app-release.apk
+          name: app-debug.apk
+          path: app/build/outputs/apk/debug/app-debug.apk
