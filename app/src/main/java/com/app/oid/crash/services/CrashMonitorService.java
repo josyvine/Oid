@@ -25,8 +25,7 @@ import java.util.Set;
 
 /**
  * The primary Background Service for Oid Crash.
- * This service stays alive to monitor app transitions and 
- * manage the crash detection lifecycle.
+ * Updated: Now acts as a bridge for Activity Pulses to the UI.
  */
 public class CrashMonitorService extends Service {
 
@@ -34,10 +33,15 @@ public class CrashMonitorService extends Service {
     private static final int NOTIF_ID = 1001;
     private static final long CHECK_INTERVAL = 2000; // Check foreground app every 2 seconds
 
+    // Pulse Constants for UI Broadcast
+    public static final String ACTION_PULSE = "com.oid.crash.ACTION_PULSE";
+    public static final String EXTRA_STATUS = "pulse_status";
+
     private Handler handler;
     private Runnable monitorRunnable;
     private String lastForegroundPackage = "";
     private AppDatabaseHelper db;
+    private AdbMonitorThread adbThread;
 
     @Override
     public void onCreate() {
@@ -58,7 +62,25 @@ public class CrashMonitorService extends Service {
         // 2. Begin the Foreground App Tracking Loop
         startMonitoringLoop();
 
-        return START_STICKY; // Ensure service restarts if killed by system
+        // 3. START POWER MODE THREAD (With Pulse logic)
+        if (db.getMonitorMode() == 1) {
+            if (adbThread != null) adbThread.stopMonitoring();
+            adbThread = new AdbMonitorThread(this, this);
+            adbThread.start();
+        }
+
+        return START_STICKY; 
+    }
+
+    /**
+     * Logic to bridge pulse signals from the Thread to the Fragment.
+     * @param status 1=Green, 2=Gray, 3=Red
+     */
+    public void onPulseReceived(int status) {
+        Intent pulseIntent = new Intent(ACTION_PULSE);
+        pulseIntent.putExtra(EXTRA_STATUS, status);
+        // Using sendBroadcast so HomeFragment can pick it up
+        sendBroadcast(pulseIntent);
     }
 
     /**
@@ -115,7 +137,6 @@ public class CrashMonitorService extends Service {
 
     /**
      * Retrieves the package name of the app currently in the foreground.
-     * Requires PACKAGE_USAGE_STATS permission.
      */
     private String getForegroundPackageName() {
         UsageStatsManager usm = (UsageStatsManager) getSystemService(Context.USAGE_STATS_SERVICE);
@@ -140,29 +161,25 @@ public class CrashMonitorService extends Service {
     public void onCrashDetected(String packageName, String appName, String errorDetail) {
         Set<String> targets = db.getTargetPackages();
         
-        // Only generate report if the crashed app is in the user's selection
         if (targets.contains(packageName)) {
             Log.e(TAG, "ALERT: Crash detected in target app: " + packageName);
-            
-            // Trigger the generation of the professional .txt report
             CrashLogGenerator.createReport(this, appName, packageName, errorDetail);
-        } else {
-            Log.d(TAG, "Crash detected in non-target app: " + packageName + ". Ignoring.");
         }
     }
 
     @Override
     public void onDestroy() {
-        super.onDestroy();
+        if (adbThread != null) adbThread.stopMonitoring();
         if (handler != null && monitorRunnable != null) {
             handler.removeCallbacks(monitorRunnable);
         }
+        super.onDestroy();
         Log.d(TAG, "Service Destroyed");
     }
 
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
-        return null; // We use startService, not bindService
+        return null;
     }
 }
