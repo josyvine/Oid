@@ -16,10 +16,17 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    // DELETED: The entire "signingConfigs" block is removed.
+    // Gradle will no longer look for KEYSTORE_FILE or any secrets.
+
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            // DELETED: The line "signingConfig signingConfigs.release" is removed.
+        }
+        debug {
+            // Debug builds are signable by default with a temporary key.
         }
     }
 
