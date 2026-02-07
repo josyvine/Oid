@@ -52,18 +52,38 @@
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 
+    <!-- ACTIVITY PULSE GRAPH -->
+    <!-- Custom View to show Green/Red heart-beat style graph -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/card_graph"
+        android:layout_width="match_parent"
+        android:layout_height="120dp"
+        android:layout_marginTop="16dp"
+        app:cardBackgroundColor="@color/black"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="4dp"
+        app:layout_constraintTop_toBottomOf="@id/card_status">
+
+        <com.oid.crash.ui.ActivityPulseView
+            android:id="@+id/pulse_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:padding="8dp" />
+
+    </com.google.android.material.card.MaterialCardView>
+
     <!-- Mode Selection Header -->
     <TextView
         android:id="@+id/tv_mode_header"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="32dp"
+        android:layout_marginTop="24dp"
         android:text="@string/mode_label"
         android:textStyle="bold"
         android:textColor="@color/black"
         android:textSize="16sp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/card_status" />
+        app:layout_constraintTop_toBottomOf="@id/card_graph" />
 
     <!-- Radio Group for Normal vs Power Mode -->
     <RadioGroup
