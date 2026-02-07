@@ -1,12 +1,12 @@
-name: Build Android APK (Debug)
+name: Build Android APK
 
 on:
   push:
     branches: [ "main", "master" ]
 
-jobs: 
+jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: Ubuntu-latest 
 
     steps:
       - name: Checkout code
@@ -18,15 +18,24 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      # This is the corrected build step. It uses the action to run Gradle.
-      - name: Build Debug APK
+      - name: Decode Keystore
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > ${{ github.workspace }}/safevoice.jks
+
+      - name: Build Release APK
         uses: gradle/gradle-build-action@v2
+        env:
+          KEYSTORE_FILE: ${{ github.workspace }}/safevoice.jks
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         with:
-          arguments: app:assembleDebug
+          gradle-version: '8.0'
+          cache-disabled: true
+          arguments: app:assembleRelease
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: oid-crash-app
-          # This grabs the debug apk
-          path: app/build/outputs/apk/debug/*.apk
+          name: app-release.apk
+          path: app/build/outputs/apk/release/app-release.apk
