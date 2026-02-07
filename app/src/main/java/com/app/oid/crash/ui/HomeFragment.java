@@ -1,8 +1,10 @@
 package com.oid.crash.ui;
 
 import android.app.ActivityManager;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -20,12 +22,26 @@ import com.oid.crash.utils.AppDatabaseHelper;
 
 /**
  * The Dashboard Fragment.
- * Handles starting/stopping the monitor service and switching modes.
+ * Updated: Now includes logic to receive Pulse data and update the Graph UI.
  */
 public class HomeFragment extends Fragment {
 
     private FragmentHomeBinding binding;
     private AppDatabaseHelper db;
+
+    // Logic to receive Pulse signals from the background service
+    private final BroadcastReceiver pulseReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (CrashMonitorService.ACTION_PULSE.equals(intent.getAction())) {
+                int status = intent.getIntExtra(CrashMonitorService.EXTRA_STATUS, 0);
+                // Update the custom graph view
+                if (binding != null) {
+                    binding.pulseView.postPulse(status);
+                }
+            }
+        }
+    };
 
     @Nullable
     @Override
@@ -140,6 +156,16 @@ public class HomeFragment extends Fragment {
     public void onResume() {
         super.onResume();
         updateUIState();
+        // Register pulse listener
+        IntentFilter filter = new IntentFilter(CrashMonitorService.ACTION_PULSE);
+        requireContext().registerReceiver(pulseReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        // Unregister to save battery
+        requireContext().unregisterReceiver(pulseReceiver);
     }
 
     @Override
