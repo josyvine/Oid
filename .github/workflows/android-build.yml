@@ -1,4 +1,4 @@
-name: Build Android APK
+name: Build Android APK (Debug)
 
 on:
   push:
@@ -18,25 +18,17 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Decode Keystore
-        env:
-          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
-        run: |
-          # The -i flag forces it to IGNORE invalid characters (like spaces or ~ $)
-          echo "$KEYSTORE_BASE64" | base64 -d -i > ${{ github.workspace }}/oid-release-key.jks
+      # STEP REMOVED: No Decode Keystore
+      # We skip the broken base64 step entirely.
 
-      - name: Build with Gradle
-        env:
-          # Point Gradle to the file we just created
-          KEYSTORE_FILE: ${{ github.workspace }}/oid-release-key.jks
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-        run: ./gradlew app:assembleRelease
+      - name: Build Debug APK
+        # We run assembleDebug instead of assembleRelease
+        # This uses the Android built-in debug key automatically.
+        run: ./gradlew app:assembleDebug
 
-      - name: Upload APK Artifact
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: app-release
-          # This wildcard (*) ensures upload even if signing fails (unsigned apk)
-          path: app/build/outputs/apk/release/*.apk
+          name: oid-crash-app
+          # This grabs the debug apk
+          path: app/build/outputs/apk/debug/*.apk
